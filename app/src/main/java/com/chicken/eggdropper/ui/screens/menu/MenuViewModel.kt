@@ -47,13 +47,17 @@ class MenuViewModel @Inject constructor(
     }
 
     fun toggleMusic() {
-        val enabled = repository.toggleMusic()
-        audioController.setMusicEnabled(enabled)
-        if (enabled) audioController.playMenuMusic() else audioController.stopMusic()
+        viewModelScope.launch {
+            val enabled = repository.toggleMusic()
+            audioController.setMusicEnabled(enabled)
+            if (enabled) audioController.playMenuMusic() else audioController.stopMusic()
+        }
     }
 
     fun toggleSound() {
-        val enabled = repository.toggleSound()
-        audioController.setSoundEnabled(enabled)
+        viewModelScope.launch {
+            val enabled = repository.toggleSound()
+            audioController.setSoundEnabled(enabled)
+        }
     }
 }

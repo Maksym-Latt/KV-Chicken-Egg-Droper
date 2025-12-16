@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,10 +37,11 @@ import androidx.compose.ui.unit.sp
 import com.chicken.eggdropper.R
 import com.chicken.eggdropper.model.BasketType
 import com.chicken.eggdropper.model.GameUiState
+import com.chicken.eggdropper.ui.components.CoinsPill
+import com.chicken.eggdropper.ui.components.GradientIconButton
 import com.chicken.eggdropper.ui.components.OutlineText
 import com.chicken.eggdropper.ui.components.PrimaryButton
 import com.chicken.eggdropper.ui.components.SecondaryButton
-
 @Composable
 fun GameScreen(
     uiState: GameUiState,
@@ -49,17 +53,11 @@ fun GameScreen(
     onToggleSound: () -> Unit,
     onStart: () -> Unit
 ) {
-    BackHandler(enabled = true) {
-        onTogglePause()
-    }
+    BackHandler(enabled = true) { onTogglePause() }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF8FD8FF), Color(0xFFb6f2ff))
-                )
-            )
             .pointerInput(uiState.isPaused, uiState.isGameOver, uiState.showIntro) {
                 detectTapGestures { onDropEgg() }
             }
@@ -68,8 +66,7 @@ fun GameScreen(
             painter = painterResource(id = R.drawable.bg),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            alpha = 0.6f
+            contentScale = ContentScale.Crop
         )
 
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -87,12 +84,13 @@ fun GameScreen(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .offset(x = plateX, y = 90.dp)
-                    .size(plateWidth),
-                alpha = 0.9f
+                    .size(plateWidth)
             )
 
             Image(
-                painter = painterResource(id = if (uiState.eggState.isFalling) uiState.selectedSkin.focusRes else uiState.selectedSkin.idleRes),
+                painter = painterResource(
+                    id = if (uiState.eggState.isFalling) uiState.selectedSkin.focusRes else uiState.selectedSkin.idleRes
+                ),
                 contentDescription = null,
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -114,7 +112,7 @@ fun GameScreen(
             BasketRow(basketX = basketX, basketType = uiState.basketType)
         }
 
-        TopHud(uiState, onTogglePause = onTogglePause)
+        TopHud(uiState = uiState, onTogglePause = onTogglePause)
 
         if (uiState.showIntro) {
             IntroOverlay(onStart = onStart)
@@ -141,48 +139,31 @@ fun GameScreen(
         }
     }
 }
-
 @Composable
-private fun TopHud(uiState: GameUiState, onTogglePause: () -> Unit) {
+private fun TopHud(
+    uiState: GameUiState,
+    onTogglePause: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 20.dp),
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = Color(0xFFffce72),
-            shadowElevation = 6.dp
-        ) {
-            Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onTogglePause) {
-                    Icon(painter = painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = null)
-                }
-                OutlineText(
-                    text = "${uiState.score} eggs",
-                    fontSize = 16.sp,
-                    brush = SolidColor(Color.White)
-                )
-            }
-        }
+        GradientIconButton(
+            iconRes = R.drawable.ic_pause,
+            onClick = onTogglePause
+        )
 
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = Color(0xFFffce72),
-            shadowElevation = 6.dp
-        ) {
-            Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlineText(
-                    text = "Best ${uiState.bestScore}",
-                    fontSize = 16.sp,
-                    brush = SolidColor(Color.White)
-                )
-            }
-        }
+        CoinsPill(
+            coins = uiState.coins,
+            eggIconRes = R.drawable.item_egg
+        )
     }
 }
+
 
 @Composable
 private fun BasketRow(basketX: Dp, basketType: BasketType) {
@@ -195,134 +176,5 @@ private fun BasketRow(basketX: Dp, basketType: BasketType) {
                 .offset(x = basketX, y = (-30).dp)
                 .size(if (basketType == BasketType.SMALL) 82.dp else 120.dp)
         )
-    }
-}
-
-@Composable
-private fun IntroOverlay(onStart: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.55f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = Color(0xFFffe5b4),
-            tonalElevation = 4.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                OutlineText(
-                    text = "How to play",
-                    fontSize = 24.sp,
-                    brush = SolidColor(Color.Black),
-                    borderColor = Color.White
-                )
-                Text(
-                    text = "Tap the screen to drop eggs. Catch them with the basket to score coins!",
-                    color = Color.Black
-                )
-                Text(
-                    text = "Each catch can also unlock coins for new skins.",
-                    color = Color.Black
-                )
-                PrimaryButton(text = "Start", modifier = Modifier.fillMaxWidth(), onClick = onStart)
-            }
-        }
-    }
-}
-
-@Composable
-private fun PauseOverlay(
-    onResume: () -> Unit,
-    onRestart: () -> Unit,
-    onMenu: () -> Unit,
-    onToggleMusic: () -> Unit,
-    onToggleSound: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.55f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = Color(0xFFffe5b4),
-            tonalElevation = 4.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlineText(
-                    text = "Pause",
-                    fontSize = 26.sp,
-                    brush = SolidColor(Color.Black),
-                    borderColor = Color.White
-                )
-                PrimaryButton(text = "Continue", modifier = Modifier.fillMaxWidth(), onClick = onResume)
-                SecondaryButton(text = "Restart", modifier = Modifier.fillMaxWidth(), onClick = onRestart)
-                SecondaryButton(text = "MENU", modifier = Modifier.fillMaxWidth(), onClick = onMenu)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SecondaryButton(text = "Music", modifier = Modifier.weight(1f), onClick = onToggleMusic)
-                    SecondaryButton(text = "Sounds", modifier = Modifier.weight(1f), onClick = onToggleSound)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun GameOverOverlay(
-    score: Int,
-    best: Int,
-    onRestart: () -> Unit,
-    onMenu: () -> Unit,
-    skinRes: Int
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.55f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = Color(0xFFffe5b4),
-            tonalElevation = 4.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlineText(
-                    text = "MISSED!",
-                    fontSize = 28.sp,
-                    brush = SolidColor(Color(0xFFe74c3c)),
-                    borderColor = Color.Black
-                )
-                Image(painter = painterResource(id = skinRes), contentDescription = null, modifier = Modifier.size(140.dp))
-                OutlineText(
-                    text = "Score: $score",
-                    fontSize = 20.sp,
-                    brush = SolidColor(Color.Black),
-                    borderColor = Color.White
-                )
-                OutlineText(
-                    text = "Best: $best",
-                    fontSize = 18.sp,
-                    brush = SolidColor(Color.Black),
-                    borderColor = Color.White
-                )
-                PrimaryButton(text = "Try again", modifier = Modifier.fillMaxWidth(), onClick = onRestart)
-                SecondaryButton(text = "Main menu", modifier = Modifier.fillMaxWidth(), onClick = onMenu)
-            }
-        }
     }
 }

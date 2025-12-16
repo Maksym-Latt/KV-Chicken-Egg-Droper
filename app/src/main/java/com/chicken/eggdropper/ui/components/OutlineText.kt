@@ -77,7 +77,6 @@ fun OutlineText(
         Text(
             text = gradientText,
             style = textPreset,
-            color = Color.White,
             lineHeight = fontSize * 1.8f,
             modifier = widthScope
         )

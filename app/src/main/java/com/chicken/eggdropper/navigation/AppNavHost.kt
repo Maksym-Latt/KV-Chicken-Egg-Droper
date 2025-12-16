@@ -15,7 +15,6 @@ import com.chicken.eggdropper.ui.screens.game.GameViewModel
 import com.chicken.eggdropper.ui.screens.menu.MenuScreen
 import com.chicken.eggdropper.ui.screens.menu.MenuViewModel
 import com.chicken.eggdropper.ui.screens.splash.SplashScreen
-import com.chicken.eggdropper.ui.screens.splash.SplashViewModel
 import com.chicken.eggdropper.ui.screens.skins.SkinsScreen
 import com.chicken.eggdropper.ui.screens.skins.SkinsViewModel
 
@@ -27,11 +26,7 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
         modifier = Modifier.fillMaxSize()
     ) {
         composable(NavigationDestination.Splash.route) {
-            val viewModel: SplashViewModel = hiltViewModel()
-            val isReady by viewModel.isReady.collectAsState()
-
             SplashScreen(
-                isReady = isReady,
                 onFinished = {
                     navController.navigate(NavigationDestination.Menu.route) {
                         popUpTo(NavigationDestination.Splash.route) { inclusive = true }

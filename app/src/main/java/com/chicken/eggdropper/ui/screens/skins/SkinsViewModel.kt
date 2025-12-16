@@ -40,6 +40,9 @@ class SkinsViewModel @Inject constructor(
 
     fun selectSkin(id: String) {
         val targetSkin = _uiState.value.skins.firstOrNull { it.id == id } ?: return
-        repository.selectSkin(targetSkin.id)
+
+        viewModelScope.launch {
+            repository.selectSkin(targetSkin.id)
+        }
     }
 }

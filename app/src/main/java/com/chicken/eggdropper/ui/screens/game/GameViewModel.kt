@@ -118,23 +118,30 @@ class GameViewModel @Inject constructor(
 
     private fun resolveLanding(state: GameUiState) {
         val hit = abs(state.chickenX - state.basketX) <= state.basketType.radius
+
         if (hit) {
             audioController.playSuccess()
+
             val gainedCoins = if (state.basketType == BasketType.SMALL) 120 else 60
-            repository.addCoins(gainedCoins)
             val newScore = state.score + state.basketType.points
-            repository.updateBestScore(newScore)
+
+            viewModelScope.launch {
+                repository.addCoins(gainedCoins)
+                repository.updateBestScore(newScore)
+            }
+
             _uiState.update {
                 it.copy(
                     eggState = EggState(),
                     score = newScore,
                     basketType = nextBasketType(),
-                    message = "+${gainedCoins}"
+                    message = "+$gainedCoins"
                 )
             }
         } else {
             audioController.playMiss()
             audioController.playLose()
+
             _uiState.update {
                 it.copy(
                     eggState = EggState(),
@@ -175,14 +182,23 @@ class GameViewModel @Inject constructor(
     }
 
     fun toggleMusic() {
-        val enabled = repository.toggleMusic()
-        audioController.setMusicEnabled(enabled)
-        if (enabled) audioController.playGameMusic() else audioController.stopMusic()
+        viewModelScope.launch {
+            val enabled = repository.toggleMusic()
+
+            audioController.setMusicEnabled(enabled)
+            if (enabled) {
+                audioController.playGameMusic()
+            } else {
+                audioController.stopMusic()
+            }
+        }
     }
 
     fun toggleSound() {
-        val enabled = repository.toggleSound()
-        audioController.setSoundEnabled(enabled)
+        viewModelScope.launch {
+            val enabled = repository.toggleSound()
+            audioController.setSoundEnabled(enabled)
+        }
     }
 
     fun startGame() {

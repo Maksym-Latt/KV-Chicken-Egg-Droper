@@ -1,10 +1,13 @@
 package com.chicken.eggdropper.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
@@ -27,80 +32,105 @@ import com.chicken.eggdropper.R
 fun PrimaryButton(
     text: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color(0xFF47C95E),
-    outlineColor: Color = Color.Black,
+    height: Dp = 64.dp,
+    cornerRadius: Dp = 18.dp,
+    outerBorderWidth: Dp = 2.dp,
+    gradient: Brush = Brush.verticalGradient(
+        listOf(Color(0xFF9BE45A), Color(0xFF4EA61D))
+    ),
+    outerBorderColor: Color = Color(0xFF2B2B2B),
     onClick: () -> Unit
 ) {
-    Surface(
+    val shape = RoundedCornerShape(cornerRadius)
+
+    Box(
         modifier = modifier
-            .height(56.dp)
-            .shadow(6.dp, RoundedCornerShape(16.dp))
+            .height(height)
+            .clip(shape)
+            .background(gradient)
+            .border(outerBorderWidth, outerBorderColor, shape)
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = onClick
             ),
-        color = backgroundColor,
-        shape = RoundedCornerShape(16.dp)
+        contentAlignment = Alignment.Center
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            OutlineText(
-                text = text,
-                borderColor = outlineColor,
-                fontSize = 22.sp,
-                brush = SolidColor(Color.White)
-            )
-        }
+        OutlineText(
+            text = text,
+            fontSize = 32.sp,
+            borderSize = 10f,
+            borderColor = Color(0xFF2B2B2B),
+            brush = SolidColor(Color.White),
+            modifier = Modifier.padding(bottom = 3.dp)
+        )
     }
 }
+
 
 @Composable
 fun SecondaryButton(
     text: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color(0xFFFFD16A),
-    outlineColor: Color = Color.Black,
+    height: Dp = 64.dp,
+    cornerRadius: Dp = 18.dp,
+    outerBorderWidth: Dp = 2.dp,
+    gradient: Brush = Brush.verticalGradient(
+        listOf(Color(0xFFF1B65B), Color(0xFFA46A0F))
+    ),
+    outerBorderColor: Color = Color(0xFF2B2B2B),
     onClick: () -> Unit
 ) {
-    Surface(
-        modifier = modifier
-            .height(48.dp)
-            .shadow(4.dp, RoundedCornerShape(14.dp))
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = onClick
-            ),
-        color = backgroundColor,
-        shape = RoundedCornerShape(14.dp)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            OutlineText(
-                text = text,
-                borderColor = outlineColor,
-                fontSize = 18.sp,
-                brush = SolidColor(Color.White)
-            )
-        }
-    }
+   PrimaryButton(
+       text = text,
+       modifier = modifier,
+       height = height,
+       cornerRadius = cornerRadius,
+       outerBorderWidth = outerBorderWidth,
+       gradient = gradient,
+       outerBorderColor = outerBorderColor,
+       onClick = onClick
+   )
 }
 
 @Composable
-fun CircleIconButton(
+fun GradientIconButton(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color(0xFFFFCC4D),
-    size: Dp = 46.dp,
-    iconRes: Int = R.drawable.ic_launcher_foreground,
+    width: Dp = 72.dp,
+    height: Dp = 60.dp,
+    cornerRadius: Dp = 20.dp,
+
+    gradient: Brush = Brush.verticalGradient(
+        listOf(Color(0xFFF6C26B), Color(0xFFC58A2E))
+    ),
+
+    borderColor: Color = Color(0xFF2D2D2D),
+    borderWidth: Dp = 2.dp,
+
+    iconRes: Int,
+    iconSize: Dp = 40.dp,
+    iconTint: Color = Color(0xfff6e4fd),
+
     onClick: () -> Unit
 ) {
     Box(
         modifier = modifier
-            .size(size)
-            .shadow(4.dp, CircleShape)
-            .background(backgroundColor, CircleShape)
+            .size(width, height)
+            .clip(RoundedCornerShape(cornerRadius))
+            .background(gradient)
+            .border(
+                width = borderWidth,
+                color = borderColor,
+                shape = RoundedCornerShape(cornerRadius)
+            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Icon(painter = painterResource(id = iconRes), contentDescription = null, tint = Color.White)
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(iconSize),
+            tint = iconTint
+        )
     }
 }

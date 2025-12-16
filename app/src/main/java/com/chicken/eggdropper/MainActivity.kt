@@ -13,27 +13,25 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    @Inject
-    lateinit var audioController: AudioController
+    @Inject lateinit var audioController: AudioController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContent {
-            ChickenEggDropperTheme {
-                AppNavHost()
-            }
-        }
+        setContent { ChickenEggDropperTheme { AppNavHost() } }
 
         hideSystemUI()
     }
 
     private fun hideSystemUI() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         controller.hide(WindowInsetsCompat.Type.navigationBars())
         controller.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.isAppearanceLightStatusBars = true
     }
 
     override fun onResume() {

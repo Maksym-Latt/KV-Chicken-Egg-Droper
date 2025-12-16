@@ -16,11 +16,14 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.math.maxOf
-
 private const val PREFS_NAME = "game_prefs"
 private val Context.dataStore by preferencesDataStore(PREFS_NAME)
 
@@ -28,29 +31,10 @@ private val Context.dataStore by preferencesDataStore(PREFS_NAME)
 class GameRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    private val _selectedSkin = MutableStateFlow(DefaultSkins.first())
-    val selectedSkin: StateFlow<ChickenSkin> = _selectedSkin
-
-    private val _purchasedSkins = MutableStateFlow(DefaultSkins.filter { it.isDefault }.map { it.id }.toSet())
-    val purchasedSkins: StateFlow<Set<String>> = _purchasedSkins
-
-    private val _coins = MutableStateFlow(0)
-    val coins: StateFlow<Int> = _coins
-
-    private val _bestScore = MutableStateFlow(0)
-    val bestScore: StateFlow<Int> = _bestScore
-
-    private val _isMusicEnabled = MutableStateFlow(true)
-    val isMusicEnabled: StateFlow<Boolean> = _isMusicEnabled
-
-    private val _isSoundEnabled = MutableStateFlow(true)
-    val isSoundEnabled: StateFlow<Boolean> = _isSoundEnabled
-
-    private val _isInitialized = MutableStateFlow(false)
-    val isInitialized: StateFlow<Boolean> = _isInitialized
-
+    /* -----------------------------
+     * Keys
+     * ----------------------------- */
     private val coinsKey = intPreferencesKey("coins")
     private val bestKey = intPreferencesKey("best_score")
     private val selectedSkinKey = stringPreferencesKey("selected_skin")
@@ -58,85 +42,111 @@ class GameRepository @Inject constructor(
     private val musicEnabledKey = booleanPreferencesKey("music_enabled")
     private val soundEnabledKey = booleanPreferencesKey("sound_enabled")
 
-    init {
-        scope.launch { observePreferences() }
-    }
+    /* -----------------------------
+     * Scope for stateIn (application-level)
+     * ----------------------------- */
+    private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private suspend fun observePreferences() {
-        context.dataStore.data.collect { prefs ->
-            _coins.value = prefs[coinsKey] ?: 0
-            _bestScore.value = prefs[bestKey] ?: 0
-            val purchased = prefs[purchasedSkinsKey] ?: _purchasedSkins.value
-            val ensuredPurchased =
-                purchased + DefaultSkins.filter { it.isDefault }.map { it.id }.toSet()
-            _purchasedSkins.value = ensuredPurchased
+    /* -----------------------------
+     * Data flow
+     * ----------------------------- */
+    private val prefsFlow: Flow<Preferences> = context.dataStore.data
 
-            if (prefs[purchasedSkinsKey] == null) {
-                persist { it[purchasedSkinsKey] = ensuredPurchased }
+    val coins: StateFlow<Int> =
+        prefsFlow
+            .map { it[coinsKey] ?: 0 }
+            .stateIn(repoScope, SharingStarted.Eagerly, 0)
+
+    val bestScore: StateFlow<Int> =
+        prefsFlow
+            .map { it[bestKey] ?: 0 }
+            .stateIn(repoScope, SharingStarted.Eagerly, 0)
+
+    val isMusicEnabled: StateFlow<Boolean> =
+        prefsFlow
+            .map { it[musicEnabledKey] ?: true }
+            .stateIn(repoScope, SharingStarted.Eagerly, true)
+
+    val isSoundEnabled: StateFlow<Boolean> =
+        prefsFlow
+            .map { it[soundEnabledKey] ?: true }
+            .stateIn(repoScope, SharingStarted.Eagerly, true)
+
+    val purchasedSkins: StateFlow<Set<String>> =
+        prefsFlow
+            .map { prefs ->
+                val defaults = DefaultSkins.filter { it.isDefault }.map { it.id }.toSet()
+                val stored = prefs[purchasedSkinsKey].orEmpty()
+                stored + defaults
             }
+            .stateIn(
+                repoScope,
+                SharingStarted.Eagerly,
+                DefaultSkins.filter { it.isDefault }.map { it.id }.toSet()
+            )
 
-            val selectedId = prefs[selectedSkinKey] ?: _selectedSkin.value.id
-            _selectedSkin.value = DefaultSkins.firstOrNull { it.id == selectedId }
-                ?: DefaultSkins.first()
+    val selectedSkin: StateFlow<ChickenSkin> =
+        combine(prefsFlow, purchasedSkins) { prefs, _ ->
+            val selectedId = prefs[selectedSkinKey]
+            DefaultSkins.firstOrNull { it.id == selectedId } ?: DefaultSkins.first()
+        }.stateIn(repoScope, SharingStarted.Eagerly, DefaultSkins.first())
 
-            _isMusicEnabled.value = prefs[musicEnabledKey] ?: true
-            _isSoundEnabled.value = prefs[soundEnabledKey] ?: true
-            _isInitialized.value = true
-        }
+    /* -----------------------------
+     * Write operations (suspend)
+     * ----------------------------- */
+    suspend fun updateBestScore(score: Int) {
+        val current = bestScore.value
+        val newBest = maxOf(score, current)
+        if (newBest == current) return
+
+        context.dataStore.edit { it[bestKey] = newBest }
     }
 
-    fun updateBestScore(score: Int) {
-        val newBest = maxOf(score, _bestScore.value)
-        if (newBest == _bestScore.value) return
-        _bestScore.value = newBest
-        persist { it[bestKey] = newBest }
-    }
-
-    fun toggleMusic(): Boolean {
-        val updated = !_isMusicEnabled.value
-        _isMusicEnabled.value = updated
-        persist { it[musicEnabledKey] = updated }
+    suspend fun toggleMusic(): Boolean {
+        val updated = !isMusicEnabled.value
+        context.dataStore.edit { it[musicEnabledKey] = updated }
         return updated
     }
 
-    fun toggleSound(): Boolean {
-        val updated = !_isSoundEnabled.value
-        _isSoundEnabled.value = updated
-        persist { it[soundEnabledKey] = updated }
+    suspend fun toggleSound(): Boolean {
+        val updated = !isSoundEnabled.value
+        context.dataStore.edit { it[soundEnabledKey] = updated }
         return updated
     }
 
-    fun selectSkin(id: String): Boolean {
+    suspend fun selectSkin(id: String): Boolean {
         val target = DefaultSkins.firstOrNull { it.id == id } ?: return false
-        val owned = target.isDefault || _purchasedSkins.value.contains(id)
-        if (!owned && !spendCoins(target.price)) return false
 
-        if (!target.isDefault) {
-            val updated = _purchasedSkins.value + id
-            _purchasedSkins.value = updated
-            persist { it[purchasedSkinsKey] = updated }
+        val owned = target.isDefault || purchasedSkins.value.contains(id)
+        if (!owned) {
+            val spent = spendCoins(target.price)
+            if (!spent) return false
         }
 
-        _selectedSkin.value = target
-        persist { it[selectedSkinKey] = id }
+        context.dataStore.edit { prefs ->
+            if (!target.isDefault) {
+                val current = prefs[purchasedSkinsKey].orEmpty()
+                prefs[purchasedSkinsKey] = current + id
+            }
+            prefs[selectedSkinKey] = id
+        }
         return true
     }
 
-    fun spendCoins(amount: Int): Boolean {
-        if (_coins.value < amount) return false
-        val updated = _coins.value - amount
-        _coins.value = updated
-        persist { it[coinsKey] = updated }
+    suspend fun spendCoins(amount: Int): Boolean {
+        val current = coins.value
+        if (current < amount) return false
+
+        context.dataStore.edit { prefs ->
+            prefs[coinsKey] = (prefs[coinsKey] ?: 0) - amount
+        }
         return true
     }
 
-    fun addCoins(amount: Int) {
-        val updated = _coins.value + amount
-        _coins.value = updated
-        persist { it[coinsKey] = updated }
-    }
-
-    private fun persist(block: suspend (Preferences.MutablePreferences) -> Unit) {
-        scope.launch { context.dataStore.edit { block(it) } }
+    suspend fun addCoins(amount: Int) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[coinsKey] ?: 0
+            prefs[coinsKey] = current + amount
+        }
     }
 }
