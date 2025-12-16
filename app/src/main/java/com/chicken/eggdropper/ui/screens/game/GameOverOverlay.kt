@@ -33,7 +33,7 @@ import com.chicken.eggdropper.ui.components.SecondaryButton
 
 @Composable
 fun GameOverOverlay(
-    score: Int,
+    coinsEarned: Int,
     best: Int,
     onRestart: () -> Unit,
     onMenu: () -> Unit,
@@ -80,7 +80,7 @@ fun GameOverOverlay(
                 Spacer(modifier = Modifier.weight(0.2f))
 
                 CoinsPill(
-                    coins = score,
+                    coins = coinsEarned,
                     eggIconRes = R.drawable.item_egg,
                     addSign = true
                 )

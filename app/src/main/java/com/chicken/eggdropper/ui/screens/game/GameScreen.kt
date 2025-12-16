@@ -161,7 +161,7 @@ fun GameScreen(
 
         if (uiState.isGameOver) {
             GameOverOverlay(
-                score = uiState.score,
+                coinsEarned = uiState.coinsEarned,
                 best = uiState.bestScore,
                 onRestart = onRestart,
                 onMenu = onOpenMenu,

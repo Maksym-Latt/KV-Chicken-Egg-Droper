@@ -110,6 +110,7 @@ class GameViewModel @Inject constructor(
 
             val gainedCoins = if (state.basketType == BasketType.SMALL) 120 else 60
             val newScore = state.score + state.basketType.points
+            val newCoinsEarned = state.coinsEarned + gainedCoins
 
             viewModelScope.launch {
                 repository.addCoins(gainedCoins)
@@ -120,6 +121,7 @@ class GameViewModel @Inject constructor(
                 it.copy(
                     eggState = EggState(),
                     score = newScore,
+                    coinsEarned = newCoinsEarned,
                     basketType = nextBasketType(),
                     basketX = randomBasketX(),
                     message = "+$gainedCoins"
@@ -167,6 +169,7 @@ class GameViewModel @Inject constructor(
                 eggState = EggState(),
                 basketType = BasketType.STANDARD,
                 score = 0,
+                coinsEarned = 0,
                 isPaused = false,
                 isGameOver = false,
                 message = "",
