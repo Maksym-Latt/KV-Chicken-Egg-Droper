@@ -23,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -34,6 +35,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.chicken.eggdropper.R
 import com.chicken.eggdropper.model.BasketType
 import com.chicken.eggdropper.model.GameUiState
@@ -47,6 +51,7 @@ fun GameScreen(
     uiState: GameUiState,
     onDropEgg: () -> Unit,
     onTogglePause: () -> Unit,
+    onForcePause: () -> Unit,
     onRestart: () -> Unit,
     onOpenMenu: () -> Unit,
     onToggleMusic: () -> Unit,
@@ -54,6 +59,20 @@ fun GameScreen(
     onStart: () -> Unit
 ) {
     BackHandler(enabled = true) { onTogglePause() }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                onForcePause()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Box(
         modifier = Modifier
@@ -72,11 +91,15 @@ fun GameScreen(
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val chickenWidth = 140.dp
             val plateWidth = 120.dp
-            val basketWidth = if (uiState.basketType == BasketType.SMALL) 82.dp else 120.dp
+            val basketSize = if (uiState.basketType == BasketType.SMALL) 82.dp else 120.dp
             val chickenX = (maxWidth - chickenWidth) * uiState.chickenX
-            val basketX = (maxWidth - basketWidth) * uiState.basketX
+            val basketX = (maxWidth - basketSize) * uiState.basketX
             val plateX = (maxWidth - plateWidth) * uiState.chickenX
-            val eggY = maxHeight * uiState.eggState.y
+            val basketCenterY = maxHeight - basketSize / 2 - 30.dp
+            val eggStartY = 160.dp
+            val eggFallDistance = (basketCenterY - eggStartY - 24.dp).coerceAtLeast(0.dp)
+            val eggProgress = uiState.eggState.y.coerceIn(0f, 1f)
+            val eggY = eggStartY + eggFallDistance * eggProgress
 
             Image(
                 painter = painterResource(id = R.drawable.item_plate),
@@ -104,7 +127,7 @@ fun GameScreen(
                     contentDescription = null,
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .offset(x = chickenX + chickenWidth / 2 - 24.dp, y = 160.dp + eggY)
+                        .offset(x = chickenX + chickenWidth / 2 - 24.dp, y = eggY)
                         .size(48.dp)
                 )
             }
