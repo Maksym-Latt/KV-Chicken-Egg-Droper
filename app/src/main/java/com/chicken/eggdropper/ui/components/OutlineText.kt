@@ -1,6 +1,8 @@
 package com.chicken.eggdropper.ui.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -10,9 +12,16 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Text
+import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.chicken.eggdropper.R
@@ -21,28 +30,56 @@ import com.chicken.eggdropper.R
 fun OutlineText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = Color.White,
-    outlineColor: Color = Color.Black,
-    fontSize: TextUnit = 20.sp,
+
+    stretchExpand: Boolean = true,
     textAlign: TextAlign = TextAlign.Center,
-    maxLines: Int = Int.MAX_VALUE,
-    fontWeight: FontWeight = FontWeight.Bold
+
+    fontSize: TextUnit = 48.sp,
+    borderSize: Float = 8f,
+    borderColor: Color = Color(0xff040300),
+
+    brush: Brush  = Brush.verticalGradient(
+        listOf(Color(0xFFAEB0FD), Color(0xFFAEB0FD))
+    )
 ) {
     val fontFamily = FontFamily(Font(R.font.poppins_bold))
-    val style = TextStyle(
-        color = color,
+
+    val textPreset = MaterialTheme.typography.displayLarge.copy(
         fontSize = fontSize,
-        textAlign = textAlign,
+        fontWeight = FontWeight.Normal,
         fontFamily = fontFamily,
-        fontWeight = fontWeight,
-        shadow = Shadow(outlineColor, offset = Offset(2f, 2f), blurRadius = 4f)
+        textAlign = textAlign
     )
+
+    val widthScope = if (stretchExpand) Modifier.fillMaxWidth() else Modifier
+
     Box(modifier = modifier) {
+
+        val gradientText = buildAnnotatedString {
+            withStyle(style = SpanStyle(brush = brush)) {
+                append(text)
+            }
+        }
+
         Text(
             text = text,
-            style = style,
-            maxLines = maxLines,
-            overflow = TextOverflow.Ellipsis
+            style = textPreset.copy(
+                color = borderColor,
+                drawStyle = Stroke(
+                    width = borderSize,
+                    join = StrokeJoin.Round
+                )
+            ),
+            lineHeight = fontSize * 1.8f,
+            modifier = widthScope
+        )
+
+        Text(
+            text = gradientText,
+            style = textPreset,
+            color = Color.White,
+            lineHeight = fontSize * 1.8f,
+            modifier = widthScope
         )
     }
 }

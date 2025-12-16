@@ -2,6 +2,8 @@ package com.chicken.eggdropper.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -24,8 +26,10 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
     ) {
         composable(NavigationDestination.Menu.route) {
             val viewModel: MenuViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsState()
+
             MenuScreen(
-                state = viewModel.uiState,
+                state = uiState,
                 onPlay = {
                     navController.navigate(NavigationDestination.Game.route)
                 },
@@ -39,8 +43,9 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
 
         composable(NavigationDestination.Game.route) {
             val viewModel: GameViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsState()
             GameScreen(
-                uiState = viewModel.uiState,
+                uiState = uiState,
                 onDropEgg = viewModel::dropEgg,
                 onTogglePause = viewModel::togglePause,
                 onRestart = viewModel::restart,
@@ -52,8 +57,9 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
 
         composable(NavigationDestination.Skins.route) {
             val viewModel: SkinsViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsState()
             SkinsScreen(
-                state = viewModel.uiState,
+                state = uiState,
                 onBack = { navController.popBackStack() },
                 onSelect = viewModel::selectSkin
             )
