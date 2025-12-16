@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -79,8 +80,8 @@ fun MenuScreen(
             OutlineText(
                 text = "CHICKEN\nEGG\nDROPPER",
                 fontSize = 32.sp,
-                color = Color.White,
-                outlineColor = Color(0xFF3b3b3b)
+                brush = SolidColor(Color.White),
+                borderColor = Color(0xFF3b3b3b)
             )
             Spacer(modifier = Modifier.height(12.dp))
             Image(
@@ -140,8 +141,8 @@ private fun HeaderRow(state: MenuUiState, onToggleSettings: () -> Unit) {
         ) {
             OutlineText(
                 text = state.coins.toString(),
-                color = Color.White,
-                outlineColor = Color(0xFF2d2d2d)
+                brush = SolidColor(Color.White),
+                borderColor = Color(0xFF2d2d2d)
             )
         }
     }
@@ -179,7 +180,12 @@ private fun SettingsOverlay(
                         tint = Color.Black
                     )
                 }
-                OutlineText(text = "Settings", fontSize = 22.sp, color = Color.Black)
+                OutlineText(
+                    text = "Settings",
+                    fontSize = 22.sp,
+                    brush = SolidColor(Color.Black),
+                    borderColor = Color.White
+                )
                 SettingToggle(
                     label = "Music",
                     checked = isMusicEnabled,

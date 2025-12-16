@@ -18,11 +18,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -44,7 +46,8 @@ fun GameScreen(
     onRestart: () -> Unit,
     onOpenMenu: () -> Unit,
     onToggleMusic: () -> Unit,
-    onToggleSound: () -> Unit
+    onToggleSound: () -> Unit,
+    onStart: () -> Unit
 ) {
     BackHandler(enabled = true) {
         onTogglePause()
@@ -57,7 +60,7 @@ fun GameScreen(
                     listOf(Color(0xFF8FD8FF), Color(0xFFb6f2ff))
                 )
             )
-            .pointerInput(uiState.isPaused, uiState.isGameOver) {
+            .pointerInput(uiState.isPaused, uiState.isGameOver, uiState.showIntro) {
                 detectTapGestures { onDropEgg() }
             }
     ) {
@@ -70,17 +73,21 @@ fun GameScreen(
         )
 
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val chickenX = maxWidth * uiState.chickenX - 60.dp
-            val basketX = maxWidth * uiState.basketX - 48.dp
+            val chickenWidth = 140.dp
+            val plateWidth = 120.dp
+            val basketWidth = if (uiState.basketType == BasketType.SMALL) 82.dp else 120.dp
+            val chickenX = (maxWidth - chickenWidth) * uiState.chickenX
+            val basketX = (maxWidth - basketWidth) * uiState.basketX
+            val plateX = (maxWidth - plateWidth) * uiState.chickenX
             val eggY = maxHeight * uiState.eggState.y
 
             Image(
                 painter = painterResource(id = R.drawable.item_plate),
                 contentDescription = null,
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(x = chickenX, y = 90.dp)
-                    .size(120.dp),
+                    .align(Alignment.TopStart)
+                    .offset(x = plateX, y = 90.dp)
+                    .size(plateWidth),
                 alpha = 0.9f
             )
 
@@ -88,9 +95,9 @@ fun GameScreen(
                 painter = painterResource(id = if (uiState.eggState.isFalling) uiState.selectedSkin.focusRes else uiState.selectedSkin.idleRes),
                 contentDescription = null,
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
+                    .align(Alignment.TopStart)
                     .offset(x = chickenX, y = 20.dp)
-                    .size(140.dp)
+                    .size(chickenWidth)
             )
 
             if (uiState.eggState.isFalling) {
@@ -99,7 +106,7 @@ fun GameScreen(
                     contentDescription = null,
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .offset(x = chickenX + 46.dp, y = 160.dp + eggY)
+                        .offset(x = chickenX + chickenWidth / 2 - 24.dp, y = 160.dp + eggY)
                         .size(48.dp)
                 )
             }
@@ -108,6 +115,10 @@ fun GameScreen(
         }
 
         TopHud(uiState, onTogglePause = onTogglePause)
+
+        if (uiState.showIntro) {
+            IntroOverlay(onStart = onStart)
+        }
 
         if (uiState.isPaused && !uiState.isGameOver) {
             PauseOverlay(
@@ -149,7 +160,11 @@ private fun TopHud(uiState: GameUiState, onTogglePause: () -> Unit) {
                 IconButton(onClick = onTogglePause) {
                     Icon(painter = painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = null)
                 }
-                OutlineText(text = "${uiState.score} eggs", fontSize = 16.sp, color = Color.White)
+                OutlineText(
+                    text = "${uiState.score} eggs",
+                    fontSize = 16.sp,
+                    brush = SolidColor(Color.White)
+                )
             }
         }
 
@@ -159,7 +174,11 @@ private fun TopHud(uiState: GameUiState, onTogglePause: () -> Unit) {
             shadowElevation = 6.dp
         ) {
             Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlineText(text = "Best ${uiState.bestScore}", fontSize = 16.sp, color = Color.White)
+                OutlineText(
+                    text = "Best ${uiState.bestScore}",
+                    fontSize = 16.sp,
+                    brush = SolidColor(Color.White)
+                )
             }
         }
     }
@@ -176,6 +195,44 @@ private fun BasketRow(basketX: Dp, basketType: BasketType) {
                 .offset(x = basketX, y = (-30).dp)
                 .size(if (basketType == BasketType.SMALL) 82.dp else 120.dp)
         )
+    }
+}
+
+@Composable
+private fun IntroOverlay(onStart: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.55f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = Color(0xFFffe5b4),
+            tonalElevation = 4.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OutlineText(
+                    text = "How to play",
+                    fontSize = 24.sp,
+                    brush = SolidColor(Color.Black),
+                    borderColor = Color.White
+                )
+                Text(
+                    text = "Tap the screen to drop eggs. Catch them with the basket to score coins!",
+                    color = Color.Black
+                )
+                Text(
+                    text = "Each catch can also unlock coins for new skins.",
+                    color = Color.Black
+                )
+                PrimaryButton(text = "Start", modifier = Modifier.fillMaxWidth(), onClick = onStart)
+            }
+        }
     }
 }
 
@@ -202,7 +259,12 @@ private fun PauseOverlay(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                OutlineText(text = "Pause", fontSize = 26.sp, color = Color.Black)
+                OutlineText(
+                    text = "Pause",
+                    fontSize = 26.sp,
+                    brush = SolidColor(Color.Black),
+                    borderColor = Color.White
+                )
                 PrimaryButton(text = "Continue", modifier = Modifier.fillMaxWidth(), onClick = onResume)
                 SecondaryButton(text = "Restart", modifier = Modifier.fillMaxWidth(), onClick = onRestart)
                 SecondaryButton(text = "MENU", modifier = Modifier.fillMaxWidth(), onClick = onMenu)
@@ -239,10 +301,25 @@ private fun GameOverOverlay(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                OutlineText(text = "MISSED!", fontSize = 28.sp, color = Color(0xFFe74c3c))
+                OutlineText(
+                    text = "MISSED!",
+                    fontSize = 28.sp,
+                    brush = SolidColor(Color(0xFFe74c3c)),
+                    borderColor = Color.Black
+                )
                 Image(painter = painterResource(id = skinRes), contentDescription = null, modifier = Modifier.size(140.dp))
-                OutlineText(text = "Score: $score", fontSize = 20.sp, color = Color.Black)
-                OutlineText(text = "Best: $best", fontSize = 18.sp, color = Color.Black)
+                OutlineText(
+                    text = "Score: $score",
+                    fontSize = 20.sp,
+                    brush = SolidColor(Color.Black),
+                    borderColor = Color.White
+                )
+                OutlineText(
+                    text = "Best: $best",
+                    fontSize = 18.sp,
+                    brush = SolidColor(Color.Black),
+                    borderColor = Color.White
+                )
                 PrimaryButton(text = "Try again", modifier = Modifier.fillMaxWidth(), onClick = onRestart)
                 SecondaryButton(text = "Main menu", modifier = Modifier.fillMaxWidth(), onClick = onMenu)
             }

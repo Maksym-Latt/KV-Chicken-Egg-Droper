@@ -26,8 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chicken.eggdropper.R
@@ -73,9 +75,14 @@ fun SkinsScreen(
                     tint = Color.Black
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                OutlineText(text = "Skins", fontSize = 26.sp, color = Color.Black)
+                OutlineText(
+                    text = "Skins",
+                    fontSize = 26.sp,
+                    brush = SolidColor(Color.Black),
+                    borderColor = Color.White
+                )
                 Spacer(modifier = Modifier.weight(1f))
-                OutlineText(text = state.coins.toString(), color = Color.White)
+                OutlineText(text = state.coins.toString(), brush = SolidColor(Color.White))
             }
 
             LazyColumn(
@@ -86,6 +93,7 @@ fun SkinsScreen(
                     SkinCard(
                         skin = skin,
                         isSelected = skin.id == state.selectedSkin.id,
+                        isOwned = state.purchasedSkins.contains(skin.id),
                         coins = state.coins,
                         onSelect = { onSelect(skin.id) }
                     )
@@ -99,6 +107,7 @@ fun SkinsScreen(
 private fun SkinCard(
     skin: ChickenSkin,
     isSelected: Boolean,
+    isOwned: Boolean,
     coins: Int,
     onSelect: () -> Unit
 ) {
@@ -120,18 +129,34 @@ private fun SkinCard(
                 modifier = Modifier.size(76.dp)
             )
             Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                OutlineText(text = skin.name, fontSize = 18.sp, color = Color.Black, outlineColor = Color.White)
-                OutlineText(text = skin.description, fontSize = 14.sp, color = Color(0xFF3a3a3a))
+                OutlineText(
+                    text = skin.name,
+                    fontSize = 18.sp,
+                    brush = SolidColor(Color.Black),
+                    borderColor = Color.White
+                )
+                OutlineText(
+                    text = skin.description,
+                    fontSize = 14.sp,
+                    brush = SolidColor(Color(0xFF3a3a3a)),
+                    borderColor = Color.White,
+                    borderSize = 4f,
+                    stretchExpand = false,
+                    textAlign = TextAlign.Start
+                )
             }
             if (isSelected) {
                 SecondaryButton(text = "Selected", modifier = Modifier.width(110.dp), onClick = {})
             } else {
-                val affordable = skin.price == 0 || coins >= skin.price
+                val affordable = skin.price == 0 || coins >= skin.price || isOwned
                 SecondaryButton(
-                    text = if (skin.price == 0) "Select" else skin.price.toString(),
+                    text = when {
+                        isOwned || skin.price == 0 -> "Select"
+                        else -> skin.price.toString()
+                    },
                     modifier = Modifier.width(110.dp),
                     backgroundColor = if (affordable) Color(0xFFFFD16A) else Color(0xFFB0B0B0),
-                    onClick = onSelect
+                    onClick = if (affordable) onSelect else {}
                 )
             }
         }

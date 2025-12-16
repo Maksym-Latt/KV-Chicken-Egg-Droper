@@ -26,7 +26,6 @@ class GameViewModel @Inject constructor(
     val uiState: StateFlow<GameUiState> = _uiState
 
     init {
-        audioController.playGameMusic()
         listenToSharedState()
         startLoops()
     }
@@ -47,6 +46,17 @@ class GameViewModel @Inject constructor(
                 _uiState.update { it.copy(bestScore = best) }
             }
         }
+        viewModelScope.launch {
+            repository.isMusicEnabled.collect { enabled ->
+                audioController.setMusicEnabled(enabled)
+                if (enabled) audioController.playGameMusic() else audioController.stopMusic()
+            }
+        }
+        viewModelScope.launch {
+            repository.isSoundEnabled.collect { enabled ->
+                audioController.setSoundEnabled(enabled)
+            }
+        }
     }
 
     private fun startLoops() {
@@ -60,7 +70,7 @@ class GameViewModel @Inject constructor(
 
     private fun tick() {
         val state = _uiState.value
-        if (state.isPaused || state.isGameOver) return
+        if (state.isPaused || state.isGameOver || state.showIntro) return
         moveChicken(state)
         moveBasket(state)
         if (state.eggState.isFalling) {
@@ -72,11 +82,11 @@ class GameViewModel @Inject constructor(
         val speed = 0.004f
         var newX = state.chickenX + speed * state.chickenDirection
         var direction = state.chickenDirection
-        if (newX < 0.1f) {
-            newX = 0.1f
+        if (newX < 0f) {
+            newX = 0f
             direction = 1
-        } else if (newX > 0.9f) {
-            newX = 0.9f
+        } else if (newX > 1f) {
+            newX = 1f
             direction = -1
         }
         _uiState.update { it.copy(chickenX = newX, chickenDirection = direction) }
@@ -86,11 +96,11 @@ class GameViewModel @Inject constructor(
         val speed = if (state.basketType == BasketType.SMALL) 0.006f else 0.004f
         var newX = state.basketX + speed * state.basketDirection
         var direction = state.basketDirection
-        if (newX < 0.15f) {
-            newX = 0.15f
+        if (newX < 0f) {
+            newX = 0f
             direction = 1
-        } else if (newX > 0.85f) {
-            newX = 0.85f
+        } else if (newX > 1f) {
+            newX = 1f
             direction = -1
         }
         _uiState.update { it.copy(basketX = newX, basketDirection = direction) }
@@ -137,7 +147,7 @@ class GameViewModel @Inject constructor(
 
     fun dropEgg() {
         val state = _uiState.value
-        if (state.eggState.isFalling || state.isPaused || state.isGameOver) return
+        if (state.eggState.isFalling || state.isPaused || state.isGameOver || state.showIntro) return
         audioController.playDrop()
         _uiState.update { it.copy(eggState = EggState(isFalling = true, y = 0f)) }
     }
@@ -149,27 +159,35 @@ class GameViewModel @Inject constructor(
     fun restart() {
         _uiState.update {
             it.copy(
-                chickenX = 0.5f,
+                chickenX = 0f,
                 chickenDirection = 1,
-                basketX = 0.3f,
+                basketX = 0f,
                 basketDirection = 1,
                 eggState = EggState(),
                 basketType = BasketType.STANDARD,
                 score = 0,
                 isPaused = false,
                 isGameOver = false,
-                message = ""
+                message = "",
+                showIntro = false
             )
         }
     }
 
     fun toggleMusic() {
-        audioController.toggleMusic()
-        if (audioController.isMusicEnabled) audioController.playGameMusic()
+        val enabled = repository.toggleMusic()
+        audioController.setMusicEnabled(enabled)
+        if (enabled) audioController.playGameMusic() else audioController.stopMusic()
     }
 
     fun toggleSound() {
-        audioController.toggleSound()
+        val enabled = repository.toggleSound()
+        audioController.setSoundEnabled(enabled)
+    }
+
+    fun startGame() {
+        _uiState.update { it.copy(showIntro = false, isPaused = false, isGameOver = false) }
+        if (audioController.isMusicEnabled) audioController.playGameMusic()
     }
 
     private fun nextBasketType(): BasketType {

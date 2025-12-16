@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,14 +39,14 @@ fun SettingToggle(
         OutlineText(
             text = label,
             fontSize = 16.sp,
-            color = Color.White,
-            outlineColor = Color.Black
+            brush = SolidColor(Color.White),
+            borderColor = Color.Black
         )
         OutlineText(
             text = if (checked) "ON" else "OFF",
             fontSize = 16.sp,
-            color = Color.White,
-            outlineColor = Color.Black
+            brush = SolidColor(Color.White),
+            borderColor = Color.Black
         )
     }
 }

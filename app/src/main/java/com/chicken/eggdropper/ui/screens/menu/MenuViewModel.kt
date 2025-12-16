@@ -21,7 +21,6 @@ class MenuViewModel @Inject constructor(
     val uiState: StateFlow<MenuUiState> = _uiState
 
     init {
-        audioController.playMenuMusic()
         viewModelScope.launch {
             repository.selectedSkin.collect { skin ->
                 _uiState.update { it.copy(selectedSkin = skin) }
@@ -32,18 +31,29 @@ class MenuViewModel @Inject constructor(
                 _uiState.update { it.copy(coins = coins) }
             }
         }
+        viewModelScope.launch {
+            repository.isMusicEnabled.collect { enabled ->
+                audioController.setMusicEnabled(enabled)
+                if (enabled) audioController.playMenuMusic() else audioController.stopMusic()
+                _uiState.update { it.copy(isMusicEnabled = enabled) }
+            }
+        }
+        viewModelScope.launch {
+            repository.isSoundEnabled.collect { enabled ->
+                audioController.setSoundEnabled(enabled)
+                _uiState.update { it.copy(isSoundEnabled = enabled) }
+            }
+        }
     }
 
     fun toggleMusic() {
-        audioController.toggleMusic()
-        if (audioController.isMusicEnabled) {
-            audioController.playMenuMusic()
-        }
-        _uiState.update { it.copy(isMusicEnabled = audioController.isMusicEnabled) }
+        val enabled = repository.toggleMusic()
+        audioController.setMusicEnabled(enabled)
+        if (enabled) audioController.playMenuMusic() else audioController.stopMusic()
     }
 
     fun toggleSound() {
-        audioController.toggleSound()
-        _uiState.update { it.copy(isSoundEnabled = audioController.isSoundEnabled) }
+        val enabled = repository.toggleSound()
+        audioController.setSoundEnabled(enabled)
     }
 }

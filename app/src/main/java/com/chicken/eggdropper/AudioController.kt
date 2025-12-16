@@ -38,15 +38,13 @@ class AudioController @Inject constructor(
     var isSoundEnabled: Boolean = true
         private set
 
-    fun toggleMusic() {
-        isMusicEnabled = !isMusicEnabled
-        if (!isMusicEnabled) {
-            stopMusic()
-        }
+    fun setMusicEnabled(enabled: Boolean) {
+        isMusicEnabled = enabled
+        if (!enabled) stopMusic()
     }
 
-    fun toggleSound() {
-        isSoundEnabled = !isSoundEnabled
+    fun setSoundEnabled(enabled: Boolean) {
+        isSoundEnabled = enabled
     }
 
     fun playMenuMusic() {

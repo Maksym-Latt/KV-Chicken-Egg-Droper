@@ -14,6 +14,8 @@ import com.chicken.eggdropper.ui.screens.game.GameScreen
 import com.chicken.eggdropper.ui.screens.game.GameViewModel
 import com.chicken.eggdropper.ui.screens.menu.MenuScreen
 import com.chicken.eggdropper.ui.screens.menu.MenuViewModel
+import com.chicken.eggdropper.ui.screens.splash.SplashScreen
+import com.chicken.eggdropper.ui.screens.splash.SplashViewModel
 import com.chicken.eggdropper.ui.screens.skins.SkinsScreen
 import com.chicken.eggdropper.ui.screens.skins.SkinsViewModel
 
@@ -21,9 +23,23 @@ import com.chicken.eggdropper.ui.screens.skins.SkinsViewModel
 fun AppNavHost(navController: NavHostController = rememberNavController()) {
     NavHost(
         navController = navController,
-        startDestination = NavigationDestination.Menu.route,
+        startDestination = NavigationDestination.Splash.route,
         modifier = Modifier.fillMaxSize()
     ) {
+        composable(NavigationDestination.Splash.route) {
+            val viewModel: SplashViewModel = hiltViewModel()
+            val isReady by viewModel.isReady.collectAsState()
+
+            SplashScreen(
+                isReady = isReady,
+                onFinished = {
+                    navController.navigate(NavigationDestination.Menu.route) {
+                        popUpTo(NavigationDestination.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(NavigationDestination.Menu.route) {
             val viewModel: MenuViewModel = hiltViewModel()
             val uiState by viewModel.uiState.collectAsState()
@@ -51,7 +67,8 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 onRestart = viewModel::restart,
                 onOpenMenu = { navController.popBackStack(NavigationDestination.Menu.route, false) },
                 onToggleMusic = viewModel::toggleMusic,
-                onToggleSound = viewModel::toggleSound
+                onToggleSound = viewModel::toggleSound,
+                onStart = viewModel::startGame
             )
         }
 

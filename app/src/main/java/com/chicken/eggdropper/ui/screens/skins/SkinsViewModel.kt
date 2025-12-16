@@ -30,13 +30,16 @@ class SkinsViewModel @Inject constructor(
                 _uiState.update { it.copy(coins = coins) }
             }
         }
+        viewModelScope.launch {
+            repository.purchasedSkins.collect { owned ->
+                _uiState.update { it.copy(purchasedSkins = owned) }
+            }
+        }
         _uiState.update { it.copy(skins = DefaultSkins) }
     }
 
     fun selectSkin(id: String) {
         val targetSkin = _uiState.value.skins.firstOrNull { it.id == id } ?: return
-        if (targetSkin.isDefault || repository.spendCoins(targetSkin.price)) {
-            repository.selectSkin(targetSkin)
-        }
+        repository.selectSkin(targetSkin.id)
     }
 }

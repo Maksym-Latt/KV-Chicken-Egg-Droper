@@ -11,24 +11,25 @@ data class EggState(
 )
 
 data class GameUiState(
-    val chickenX: Float = 0.5f,
+    val chickenX: Float = 0f,
     val chickenDirection: Int = 1,
-    val basketX: Float = 0.3f,
+    val basketX: Float = 0f,
     val basketDirection: Int = 1,
     val eggState: EggState = EggState(),
     val basketType: BasketType = BasketType.STANDARD,
     val score: Int = 0,
     val bestScore: Int = 0,
-    val coins: Int = 4500,
+    val coins: Int = 0,
     val isPaused: Boolean = false,
     val isGameOver: Boolean = false,
     val isDropping: Boolean = false,
     val selectedSkin: ChickenSkin = DefaultSkins.first(),
-    val message: String = ""
+    val message: String = "",
+    val showIntro: Boolean = true
 )
 
 data class MenuUiState(
-    val coins: Int = 4500,
+    val coins: Int = 0,
     val selectedSkin: ChickenSkin = DefaultSkins.first(),
     val isMusicEnabled: Boolean = true,
     val isSoundEnabled: Boolean = true
@@ -37,5 +38,6 @@ data class MenuUiState(
 data class SkinsUiState(
     val skins: List<ChickenSkin> = DefaultSkins,
     val selectedSkin: ChickenSkin = DefaultSkins.first(),
-    val coins: Int = 4500
+    val coins: Int = 0,
+    val purchasedSkins: Set<String> = DefaultSkins.filter { it.isDefault }.map { it.id }.toSet()
 )
