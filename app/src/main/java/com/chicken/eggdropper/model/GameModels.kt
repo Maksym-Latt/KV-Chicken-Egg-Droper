@@ -20,6 +20,7 @@ data class GameUiState(
     val score: Int = 0,
     val bestScore: Int = 0,
     val coins: Int = 0,
+    val coinsEarned: Int = 0,
     val isPaused: Boolean = false,
     val isGameOver: Boolean = false,
     val isDropping: Boolean = false,
