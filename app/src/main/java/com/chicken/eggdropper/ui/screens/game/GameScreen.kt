@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -46,6 +47,7 @@ import com.chicken.eggdropper.ui.components.GradientIconButton
 import com.chicken.eggdropper.ui.components.OutlineText
 import com.chicken.eggdropper.ui.components.PrimaryButton
 import com.chicken.eggdropper.ui.components.SecondaryButton
+
 @Composable
 fun GameScreen(
     uiState: GameUiState,
@@ -92,21 +94,28 @@ fun GameScreen(
             val chickenWidth = 140.dp
             val plateWidth = 120.dp
             val basketSize = if (uiState.basketType == BasketType.SMALL) 82.dp else 120.dp
+
             val chickenX = (maxWidth - chickenWidth) * uiState.chickenX
+            val plateX = chickenX + (chickenWidth - plateWidth) / 2
+
             val basketX = (maxWidth - basketSize) * uiState.basketX
-            val plateX = (maxWidth - plateWidth) * uiState.chickenX
             val basketCenterY = maxHeight - basketSize / 2 - 30.dp
+
             val eggStartY = 160.dp
             val eggFallDistance = (basketCenterY - eggStartY - 24.dp).coerceAtLeast(0.dp)
             val eggProgress = uiState.eggState.y.coerceIn(0f, 1f)
             val eggY = eggStartY + eggFallDistance * eggProgress
+
+            val safeTop = WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding()
+            val hudHeightEstimate = 56.dp
+            val chickenTopY = safeTop + hudHeightEstimate + 32.dp
 
             Image(
                 painter = painterResource(id = R.drawable.item_plate),
                 contentDescription = null,
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .offset(x = plateX, y = 90.dp)
+                    .offset(x = plateX, y = chickenTopY + 85.dp)
                     .size(plateWidth)
             )
 
@@ -117,7 +126,7 @@ fun GameScreen(
                 contentDescription = null,
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .offset(x = chickenX, y = 20.dp)
+                    .offset(x = chickenX, y = chickenTopY)
                     .size(chickenWidth)
             )
 
@@ -134,7 +143,6 @@ fun GameScreen(
 
             BasketRow(basketX = basketX, basketType = uiState.basketType)
         }
-
         TopHud(uiState = uiState, onTogglePause = onTogglePause)
 
         if (uiState.showIntro) {
@@ -162,6 +170,7 @@ fun GameScreen(
         }
     }
 }
+
 @Composable
 private fun TopHud(
     uiState: GameUiState,
