@@ -59,6 +59,7 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 uiState = uiState,
                 onDropEgg = viewModel::dropEgg,
                 onTogglePause = viewModel::togglePause,
+                onForcePause = viewModel::pauseGame,
                 onRestart = viewModel::restart,
                 onOpenMenu = { navController.popBackStack(NavigationDestination.Menu.route, false) },
                 onToggleMusic = viewModel::toggleMusic,

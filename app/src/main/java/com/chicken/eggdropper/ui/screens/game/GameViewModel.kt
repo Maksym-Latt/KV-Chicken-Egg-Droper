@@ -27,6 +27,7 @@ class GameViewModel @Inject constructor(
 
     init {
         listenToSharedState()
+        randomizeBasketPosition()
         startLoops()
     }
 
@@ -72,7 +73,6 @@ class GameViewModel @Inject constructor(
         val state = _uiState.value
         if (state.isPaused || state.isGameOver || state.showIntro) return
         moveChicken(state)
-        moveBasket(state)
         if (state.eggState.isFalling) {
             advanceEgg(state)
         }
@@ -90,20 +90,6 @@ class GameViewModel @Inject constructor(
             direction = -1
         }
         _uiState.update { it.copy(chickenX = newX, chickenDirection = direction) }
-    }
-
-    private fun moveBasket(state: GameUiState) {
-        val speed = if (state.basketType == BasketType.SMALL) 0.006f else 0.004f
-        var newX = state.basketX + speed * state.basketDirection
-        var direction = state.basketDirection
-        if (newX < 0f) {
-            newX = 0f
-            direction = 1
-        } else if (newX > 1f) {
-            newX = 1f
-            direction = -1
-        }
-        _uiState.update { it.copy(basketX = newX, basketDirection = direction) }
     }
 
     private fun advanceEgg(state: GameUiState) {
@@ -135,6 +121,7 @@ class GameViewModel @Inject constructor(
                     eggState = EggState(),
                     score = newScore,
                     basketType = nextBasketType(),
+                    basketX = randomBasketX(),
                     message = "+$gainedCoins"
                 )
             }
@@ -163,13 +150,20 @@ class GameViewModel @Inject constructor(
         _uiState.update { it.copy(isPaused = !it.isPaused) }
     }
 
+    fun pauseGame() {
+        _uiState.update { current ->
+            if (current.isGameOver) current else current.copy(isPaused = true)
+        }
+    }
+
     fun restart() {
+        val basketX = randomBasketX()
         _uiState.update {
             it.copy(
                 chickenX = 0f,
                 chickenDirection = 1,
-                basketX = 0f,
-                basketDirection = 1,
+                basketX = basketX,
+                basketDirection = 0,
                 eggState = EggState(),
                 basketType = BasketType.STANDARD,
                 score = 0,
@@ -209,4 +203,10 @@ class GameViewModel @Inject constructor(
     private fun nextBasketType(): BasketType {
         return if (Random.nextFloat() > 0.65f) BasketType.SMALL else BasketType.STANDARD
     }
+
+    private fun randomizeBasketPosition() {
+        _uiState.update { it.copy(basketX = randomBasketX(), basketDirection = 0) }
+    }
+
+    private fun randomBasketX(): Float = Random.nextFloat().coerceIn(0f, 1f)
 }
