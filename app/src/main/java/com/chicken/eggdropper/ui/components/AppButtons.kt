@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -43,7 +44,12 @@ fun PrimaryButton(
         shape = RoundedCornerShape(16.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
-            OutlineText(text = text, outlineColor = outlineColor, fontSize = 22.sp)
+            OutlineText(
+                text = text,
+                borderColor = outlineColor,
+                fontSize = 22.sp,
+                brush = SolidColor(Color.White)
+            )
         }
     }
 }
@@ -69,7 +75,12 @@ fun SecondaryButton(
         shape = RoundedCornerShape(14.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
-            OutlineText(text = text, outlineColor = outlineColor, fontSize = 18.sp)
+            OutlineText(
+                text = text,
+                borderColor = outlineColor,
+                fontSize = 18.sp,
+                brush = SolidColor(Color.White)
+            )
         }
     }
 }
