@@ -53,6 +53,7 @@ constructor(private val repository: GameRepository, private val audioController:
         viewModelScope.launch {
             repository.isSoundEnabled.collect { enabled ->
                 audioController.setSoundEnabled(enabled)
+                _uiState.update { it.copy(isSoundEnabled = enabled) }
             }
         }
     }
@@ -189,6 +190,7 @@ constructor(private val repository: GameRepository, private val audioController:
         viewModelScope.launch {
             val enabled = repository.toggleSound()
             audioController.setSoundEnabled(enabled)
+            _uiState.update { it.copy(isSoundEnabled = enabled) }
         }
     }
 
