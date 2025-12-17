@@ -18,10 +18,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class GameViewModel @Inject constructor(
-    private val repository: GameRepository,
-    private val audioController: AudioController
-) : ViewModel() {
+class GameViewModel
+@Inject
+constructor(private val repository: GameRepository, private val audioController: AudioController) :
+        ViewModel() {
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState
 
@@ -38,19 +38,16 @@ class GameViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            repository.coins.collect { coins ->
-                _uiState.update { it.copy(coins = coins) }
-            }
+            repository.coins.collect { coins -> _uiState.update { it.copy(coins = coins) } }
         }
         viewModelScope.launch {
-            repository.bestScore.collect { best ->
-                _uiState.update { it.copy(bestScore = best) }
-            }
+            repository.bestScore.collect { best -> _uiState.update { it.copy(bestScore = best) } }
         }
         viewModelScope.launch {
             repository.isMusicEnabled.collect { enabled ->
                 audioController.setMusicEnabled(enabled)
                 if (enabled) audioController.playGameMusic() else audioController.stopMusic()
+                _uiState.update { it.copy(isMusicEnabled = enabled) }
             }
         }
         viewModelScope.launch {
@@ -119,12 +116,12 @@ class GameViewModel @Inject constructor(
 
             _uiState.update {
                 it.copy(
-                    eggState = EggState(),
-                    score = newScore,
-                    coinsEarned = newCoinsEarned,
-                    basketType = nextBasketType(),
-                    basketX = randomBasketX(),
-                    message = "+$gainedCoins"
+                        eggState = EggState(),
+                        score = newScore,
+                        coinsEarned = newCoinsEarned,
+                        basketType = nextBasketType(),
+                        basketX = randomBasketX(),
+                        message = "+$gainedCoins"
                 )
             }
         } else {
@@ -132,18 +129,15 @@ class GameViewModel @Inject constructor(
             audioController.playLose()
 
             _uiState.update {
-                it.copy(
-                    eggState = EggState(),
-                    isGameOver = true,
-                    message = "MISSED!"
-                )
+                it.copy(eggState = EggState(), isGameOver = true, message = "MISSED!")
             }
         }
     }
 
     fun dropEgg() {
         val state = _uiState.value
-        if (state.eggState.isFalling || state.isPaused || state.isGameOver || state.showIntro) return
+        if (state.eggState.isFalling || state.isPaused || state.isGameOver || state.showIntro)
+                return
         audioController.playDrop()
         _uiState.update { it.copy(eggState = EggState(isFalling = true, y = 0f)) }
     }
@@ -162,18 +156,18 @@ class GameViewModel @Inject constructor(
         val basketX = randomBasketX()
         _uiState.update {
             it.copy(
-                chickenX = 0f,
-                chickenDirection = 1,
-                basketX = basketX,
-                basketDirection = 0,
-                eggState = EggState(),
-                basketType = BasketType.STANDARD,
-                score = 0,
-                coinsEarned = 0,
-                isPaused = false,
-                isGameOver = false,
-                message = "",
-                showIntro = false
+                    chickenX = 0f,
+                    chickenDirection = 1,
+                    basketX = basketX,
+                    basketDirection = 0,
+                    eggState = EggState(),
+                    basketType = BasketType.STANDARD,
+                    score = 0,
+                    coinsEarned = 0,
+                    isPaused = false,
+                    isGameOver = false,
+                    message = "",
+                    showIntro = false
             )
         }
     }

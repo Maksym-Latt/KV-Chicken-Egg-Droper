@@ -26,7 +26,9 @@ data class GameUiState(
     val isDropping: Boolean = false,
     val selectedSkin: ChickenSkin = DefaultSkins.first(),
     val message: String = "",
-    val showIntro: Boolean = true
+    val showIntro: Boolean = true,
+    val isMusicEnabled: Boolean = true,
+    val isSoundEnabled: Boolean = true
 )
 
 data class MenuUiState(
